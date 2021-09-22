@@ -6,7 +6,7 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Radio from '@material-ui/core/Radio';
 import {DataGrid} from '@material-ui/data-grid';
-import {SEMESTER_LIST} from '../constants.js'
+import {SEMESTER_LIST} from '../constants.js';
 
 // user selects from a list of  (year, semester) values
 class Semester extends Component {
@@ -19,6 +19,7 @@ class Semester extends Component {
     console.log("Semester.onRadioClick "+JSON.stringify(event.target.value));
     this.setState({selected: event.target.value});
   }
+
   
   render() {    
       const icolumns = [
@@ -29,7 +30,7 @@ class Semester extends Component {
         renderCell: (params) => (
           <div>
             <Radio
-              checked={params.row.id == this.state.selected}
+              checked={params.row.id === this.state.selected}
               onChange={this.onRadioClick}
               value={params.row.id}
               color="default"
@@ -62,8 +63,16 @@ class Semester extends Component {
                 variant="outlined" color="primary" style={{margin: 10}}>
                 Get Schedule
               </Button>
+              <Button component={Link} 
+                      to={{pathname:'/students' , 
+                      year:SEMESTER_LIST[this.state.selected].year, 
+                      semester:SEMESTER_LIST[this.state.selected].name}} 
+                variant="outlined" color="primary" style={{margin: 10}}>
+                Get Students
+              </Button>
           </div>
       </div>
+      
     )
   }
 }

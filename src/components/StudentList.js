@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'js-cookie';
@@ -9,7 +10,7 @@ import {DataGrid} from '@material-ui/data-grid';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import AddCourse from './AddCourse';
+import AddStudent from './AddStudent';
 
 // NOTE:  for OAuth security, http request must have
 //   credentials: 'include' 
@@ -20,21 +21,21 @@ import AddCourse from './AddCourse';
 //  NOTE: because SchedList is invoked via <Route> in App.js  
 //  props are accessed via props.location 
 
-class SchedList extends Component {
+class StudentList extends Component {
   constructor(props) {
     super(props);
-    this.state = { courses: [] };
+    this.state = {name:"", email:"test@csumb.edu", student_id: 1, status_code: 1, status: ""};
   } 
   
   componentDidMount() {
-    this.fetchCourses();
+    this.fetchStudent();
   }
   
-  fetchCourses = () => {
-    console.log("SchedList.fetchCourses");
+// Fetch student
+  fetchStudent = () => {
+    console.log("StudentList.fetchStudents");
     const token = Cookies.get('XSRF-TOKEN');
-    
-    fetch(`${SERVER_URL}/schedule?year=${this.props.location.year}&semester=${this.props.location.semester}`, 
+    fetch(`${SERVER_URL}/student?email=${this.state.email}`, 
       {  
         method: 'GET', 
         headers: { 'X-XSRF-TOKEN': token }
@@ -44,15 +45,11 @@ class SchedList extends Component {
       return response.json();}) 
     .then((responseData) => { 
       // do a sanity check on response
-      if (Array.isArray(responseData.courses)) {
-        this.setState({ 
-          courses: responseData.courses,
-        });
-      } else {
-        toast.error("Fetch failed.", {
-          position: toast.POSITION.BOTTOM_LEFT
-        });
-      }        
+      this.setState({student_id:responseData.student_id});
+      this.setState({name:responseData.name});
+      this.setState({email:responseData.email});
+      this.setState({status_code:responseData.status_code});
+      this.setState({status:responseData.status});
     })
     .catch(err => {
       toast.error("Fetch failed.", {
@@ -62,54 +59,25 @@ class SchedList extends Component {
     })
   }
 
-  // Drop Course 
-  onDelClick = (id) => {
-    if (window.confirm('Are you sure you want to drop the course?')) {
-      const token = Cookies.get('XSRF-TOKEN');
-      
-      fetch(`${SERVER_URL}/schedule/${id}`,
-        {
-          method: 'DELETE',
-          headers: { 'X-XSRF-TOKEN': token }
-        })
-    .then(res => {
-        if (res.ok) {
-          toast.success("Course successfully dropped", {
-              position: toast.POSITION.BOTTOM_LEFT
-          });
-          this.fetchCourses();
-        } else {
-          toast.error("Course drop failed", {
-              position: toast.POSITION.BOTTOM_LEFT
-          });
-          console.error('Delete http status =' + res.status);
-    }})
-      .catch(err => {
-        toast.error("Course drop failed", {
-              position: toast.POSITION.BOTTOM_LEFT
-        });
-        console.error(err);
-      }) 
-    } 
-  }
 
-  // Add course
-  addCourse = (course) => {
+   // Add Student
+   addStudent = (student) => {
     const token = Cookies.get('XSRF-TOKEN');
  
-    fetch(`${SERVER_URL}/schedule`,
+    fetch(`${SERVER_URL}/student`,
       { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json',
                    'X-XSRF-TOKEN': token  }, 
-        body: JSON.stringify(course)
+        body: JSON.stringify(student)
       })
     .then(res => {
         if (res.ok) {
-          toast.success("Course successfully added", {
+          toast.success("Student successfully added", {
               position: toast.POSITION.BOTTOM_LEFT
           });
-          this.fetchCourses();
+          this.setState({email:student.email});
+          this.fetchStudent();
         } else {
           toast.error("Error when adding", {
               position: toast.POSITION.BOTTOM_LEFT
@@ -124,16 +92,53 @@ class SchedList extends Component {
     })
   } 
 
+   // Change Status 
+  onChangeStatus = (id) => {
+    if (window.confirm('Are you sure you want to change student Status?')) {
+      const token = Cookies.get('XSRF-TOKEN');
+      var url;
+      if(this.state.status_code !=0)
+        url = SERVER_URL+ "/student/" + this.state.email + "?status_code=" + 0;
+      else 
+        url = SERVER_URL+ "/student/" + this.state.email + "?status_code=" + 1;
+      
+      fetch(url,
+        {
+          method: 'PUT',
+          headers: { 'X-XSRF-TOKEN': token }
+        })
+    .then(res => {
+        if (res.ok) {
+          console.log(res);
+          toast.success("Status Successfully Changed!", {
+              position: toast.POSITION.BOTTOM_LEFT
+          });
+          this.fetchStudent();
+        } else {
+          toast.error("Failed to change Status Code", {
+              position: toast.POSITION.BOTTOM_LEFT
+          });
+          console.error('Delete http status =' + res.status);
+    }})
+      .catch(err => {
+        toast.error("Failed To change Staus Code", {
+              position: toast.POSITION.BOTTOM_LEFT
+        });
+        console.error(err);
+        console.log(err);
+      }) 
+    } 
+  }
+
   render() {
      const columns = [
-      { field: 'title', headerName: 'Title', width: 400 },
-      { field: 'section', headerName: 'Section', width: 125 },
-      { field: 'times', headerName: 'Times', width: 200 },
-      { field: 'building', headerName: 'Building', width: 150 },
-      { field: 'room', headerName: 'Room',  width: 150 },
-      { field: 'grade', headerName: 'Grade', width: 150 },
+      { field: 'id', headerName: 'ID Number', width: 200 },
+      { field: 'name', headerName: 'Name', width: 200 },
+      { field: 'email', headerName: 'Email', width: 200 },
+      { field: 'status', headerName: 'Status', width: 150 },
+      { field: 'status_code', headerName: 'Status Code',  width: 200 },
       {
-        field: 'id',
+        field: 'changeStatus',
         headerName: '  ',
         sortable: false,
         width: 200,
@@ -143,31 +148,38 @@ class SchedList extends Component {
               color="secondary"
               size="small"
               style={{ marginLeft: 16 }} 
-              onClick={()=>{this.onDelClick(params.value)}}
+              onClick={()=>{this.onChangeStatus(params.value)}}
             >
-              Drop
+              Change Status
             </Button>
         )
       }
       ];
+      const rows = [{
+        name: this.state.name,
+        email: this.state.email,
+        status: this.state.status,
+        status_code: this.state.status_code,
+        id:this.state.student_id
+      }];
   
   return(
       <div>
           <AppBar position="static" color="default">
             <Toolbar>
                <Typography variant="h6" color="inherit">
-                  { 'Schedule ' + this.props.location.year + ' ' +this.props.location.semester }
+                  { 'Students List' }
                 </Typography>
             </Toolbar>
           </AppBar>
           <div className="App">
             <Grid container>
               <Grid item>
-                  <AddCourse addCourse={this.addCourse}  />
+                  <AddStudent addStudent={this.addStudent}  />
               </Grid>
             </Grid>
             <div style={{ height: 400, width: '100%' }}>
-              <DataGrid rows={this.state.courses} columns={columns} />
+              <DataGrid rows={rows} columns={columns} />
             </div>
             <ToastContainer autoClose={1500} />   
           </div>
@@ -179,7 +191,7 @@ class SchedList extends Component {
 // required properties:  year integer , semester string
 //  NOTE: because SchedList is invoked via <Route> in App.js  
 //  props are accessed via props.location 
-SchedList.propTypes = {
+StudentList.propTypes = {
   location: (properties, propertyName, componentName) => {
        if ( (!Number.isInteger(properties.location.year)) || !(typeof properties.location.semester === 'string') || (properties.location.semester instanceof String )) {
          return new Error('AddCourse: Missing or invalid property year or semester.');
@@ -188,4 +200,4 @@ SchedList.propTypes = {
   }
 
  
-export default SchedList;
+export default StudentList;
