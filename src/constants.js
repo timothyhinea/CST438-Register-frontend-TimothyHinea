@@ -1,4 +1,4 @@
-export const SERVER_URL = 'https://git.heroku.com/cst438register-be-hinea.git';
+export const SERVER_URL = 'https://cst438register-be-hinea.herokuapp.com/';
 
 export const SEMESTER_LIST = [
   {id:0, year:2020, name:'Fall'},
