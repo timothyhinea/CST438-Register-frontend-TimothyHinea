@@ -30,7 +30,7 @@ class StudentList extends Component {
   } 
   
   componentDidMount() {
-    this.fetchStudent();
+    //this.fetchStudent();
   }
   
 // Fetch student
