@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'js-cookie';
@@ -40,7 +39,8 @@ class StudentList extends Component {
     fetch(`${SERVER_URL}/student?email=${this.state.email}`, 
       {  
         method: 'GET', 
-        headers: { 'X-XSRF-TOKEN': token }
+        headers: { 'X-XSRF-TOKEN': token },
+        credentials: 'include' 
       } )
     .then((response) => {
       console.log("FETCH RESP:"+response);
@@ -65,12 +65,12 @@ class StudentList extends Component {
    // Add Student
    addStudent = (student) => {
     const token = Cookies.get('XSRF-TOKEN');
- 
     fetch(`${SERVER_URL}/student`,
       { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json',
-                   'X-XSRF-TOKEN': token  }, 
+                   'X-XSRF-TOKEN': token},
+                   credentials: 'include', 
         body: JSON.stringify(student)
       })
     .then(res => {
@@ -99,7 +99,7 @@ class StudentList extends Component {
     if (window.confirm('Are you sure you want to change student Status?')) {
       const token = Cookies.get('XSRF-TOKEN');
       var url;
-      if(this.state.status_code !=0)
+      if(this.state.status_code !==0)
         url = SERVER_URL+ "/student/" + this.state.email + "?status_code=" + 0;
       else 
         url = SERVER_URL+ "/student/" + this.state.email + "?status_code=" + 1;
@@ -107,7 +107,9 @@ class StudentList extends Component {
       fetch(url,
         {
           method: 'PUT',
-          headers: { 'X-XSRF-TOKEN': token }
+          headers: { 'X-XSRF-TOKEN': token },
+          credentials: 'include' 
+          
         })
     .then(res => {
         if (res.ok) {
